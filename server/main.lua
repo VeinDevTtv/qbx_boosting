@@ -37,6 +37,13 @@ CreateThread(function()
         )
     ]])
 
+    -- Add columns to the player_vehicles table if they don't exist
+    MySQL.query.await([[
+        ALTER TABLE `player_vehicles` 
+        ADD COLUMN IF NOT EXISTS `vin` tinyint(1) DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS `isvin` tinyint(1) DEFAULT 0
+    ]])
+
     -- Start all the handler threads and initialize modules
     InitLaptop()
     InitAuction()
@@ -59,6 +66,16 @@ CreateThread(function()
             Wait(60000) -- Check every minute
         end
     end)
+    
+    -- Cleanup expired contracts every hour
+    CreateThread(function()
+        while true do
+            CleanupExpiredContracts()
+            Wait(3600000) -- Check every hour
+        end
+    end)
+    
+    print("[QBX-Boosting] Resource initialized successfully!")
 end)
 
 -- Helper function to parse contracts from database to usable format
