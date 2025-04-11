@@ -1,4 +1,4 @@
-local QBX = exports['qbx_core']:GetCoreObject()
+local QBX = exports['qbx_core']:GetSharedObject()
 CurrentContract = nil
 CurrentTaskId = 0
 CurrentVehicle = nil

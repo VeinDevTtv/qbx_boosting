@@ -1,4 +1,4 @@
-local QBX = exports['qbx_core']:GetCoreObject()
+local QBX = exports['qbx_core']:GetSharedObject()
 
 function InitLaptop()
     -- Callback to get boosting data for a player
