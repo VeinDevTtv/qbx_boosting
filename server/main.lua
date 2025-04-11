@@ -1,8 +1,10 @@
 local QBX = exports['qbx_core']:GetSharedObject()
 ActiveContracts = {}
 
--- Initialize all handlers when resource starts
-CreateThread(function()
+-- Function to initialize database tables
+function InitializeDatabase()
+    print("[QBX-Boosting] Initializing database tables...")
+    
     -- Ensure the database table exists
     MySQL.query.await([[
         CREATE TABLE IF NOT EXISTS `laptop_boosting` (
@@ -43,6 +45,14 @@ CreateThread(function()
         ADD COLUMN IF NOT EXISTS `vin` tinyint(1) DEFAULT 0,
         ADD COLUMN IF NOT EXISTS `isvin` tinyint(1) DEFAULT 0
     ]])
+    
+    print("[QBX-Boosting] Database tables initialized successfully!")
+end
+
+-- Initialize all handlers when resource starts
+CreateThread(function()
+    -- Initialize the database first
+    InitializeDatabase()
 
     -- Start all the handler threads and initialize modules
     InitLaptop()
@@ -70,12 +80,27 @@ CreateThread(function()
     -- Cleanup expired contracts every hour
     CreateThread(function()
         while true do
+            Wait(10000) -- Initial delay to ensure tables are created
             CleanupExpiredContracts()
             Wait(3600000) -- Check every hour
         end
     end)
     
     print("[QBX-Boosting] Resource initialized successfully!")
+end)
+
+-- Register a server event handler for when resources start
+AddEventHandler('onResourceStart', function(resourceName)
+    if resourceName == GetCurrentResourceName() then
+        print('[QBX-Boosting] Resource started: ' .. resourceName)
+    end
+end)
+
+-- Register a server event handler for when resources stop
+AddEventHandler('onResourceStop', function(resourceName)
+    if resourceName == GetCurrentResourceName() then
+        print('[QBX-Boosting] Resource stopped: ' .. resourceName)
+    end
 end)
 
 -- Helper function to parse contracts from database to usable format

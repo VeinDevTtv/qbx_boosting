@@ -106,36 +106,44 @@ end
 function CleanupExpiredContracts()
     local now = os.time()
     
-    -- Delete expired contracts
-    MySQL.query.await('DELETE FROM laptop_boosting WHERE expire < ? AND auction = 0', {now})
-    
-    -- Process ended auctions
-    local endedAuctions = MySQL.query.await('SELECT * FROM laptop_boosting WHERE auction_end < ? AND auction = 1', {now})
-    
-    if endedAuctions and #endedAuctions > 0 then
-        for i = 1, #endedAuctions do
-            local auction = endedAuctions[i]
-            
-            -- If someone bid on the auction
-            if auction.bidder ~= "1001" then
-                -- Transfer contract to the highest bidder
-                MySQL.update.await('UPDATE laptop_boosting SET cid = ?, auction = 0 WHERE id = ?', {auction.bidder, auction.id})
+    -- Add proper error handling for table creation
+    local success, _ = pcall(function()
+        -- Delete expired contracts
+        MySQL.query.await('DELETE FROM laptop_boosting WHERE expire < ? AND auction = 0', {now})
+        
+        -- Process ended auctions
+        local endedAuctions = MySQL.query.await('SELECT * FROM laptop_boosting WHERE auction_end < ? AND auction = 1', {now})
+        
+        if endedAuctions and #endedAuctions > 0 then
+            for i = 1, #endedAuctions do
+                local auction = endedAuctions[i]
                 
-                -- Notify seller (if online)
-                local seller = QBX.Functions.GetPlayerByCitizenId(auction.cid)
-                if seller then
-                    exports.ox_inventory:AddItem(seller.PlayerData.source, auction.crypto:lower(), auction.bid)
-                    TriggerClientEvent('ox_lib:notify', seller.PlayerData.source, {
-                        title = 'Auction Complete',
-                        description = 'Your contract was sold for ' .. auction.bid .. ' ' .. auction.crypto,
-                        type = 'success'
-                    })
+                -- If someone bid on the auction
+                if auction.bidder ~= "1001" then
+                    -- Transfer contract to the highest bidder
+                    MySQL.update.await('UPDATE laptop_boosting SET cid = ?, auction = 0 WHERE id = ?', {auction.bidder, auction.id})
+                    
+                    -- Notify seller (if online)
+                    local seller = QBX.Functions.GetPlayerByCitizenId(auction.cid)
+                    if seller then
+                        exports.ox_inventory:AddItem(seller.PlayerData.source, auction.crypto:lower(), auction.bid)
+                        TriggerClientEvent('ox_lib:notify', seller.PlayerData.source, {
+                            title = 'Auction Complete',
+                            description = 'Your contract was sold for ' .. auction.bid .. ' ' .. auction.crypto,
+                            type = 'success'
+                        })
+                    end
+                else
+                    -- No bids, return to seller
+                    MySQL.update.await('UPDATE laptop_boosting SET auction = 0 WHERE id = ?', {auction.id})
                 end
-            else
-                -- No bids, return to seller
-                MySQL.update.await('UPDATE laptop_boosting SET auction = 0 WHERE id = ?', {auction.id})
             end
         end
+    end)
+    
+    if not success then
+        -- This will prevent the resource from crashing if the tables don't exist yet
+        print("[QBX-Boosting] Tables not initialized yet. Skipping cleanup.")
     end
 end
 
