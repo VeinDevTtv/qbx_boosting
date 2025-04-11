@@ -1,4 +1,53 @@
-local QBX = exports['qbx_core']:GetSharedObject()
+-- Try different methods to load QBX Core
+local QBX = nil
+local loadAttempts = 0
+local maxAttempts = 10
+
+local function LoadQBXCore()
+    loadAttempts = loadAttempts + 1
+    
+    -- Try different methods to load QBX Core
+    local success, result = pcall(function()
+        -- Method 1: Try require
+        return require('qbx_core')
+    end)
+    
+    if success and result then
+        return result
+    end
+    
+    -- Method 2: Try direct export
+    success, result = pcall(function()
+        return exports['qbx_core']:GetCoreObject()
+    end)
+    
+    if success and result then
+        return result
+    end
+    
+    -- Method 3: Try GetSharedObject export
+    success, result = pcall(function()
+        return exports['qbx_core']:GetSharedObject()
+    end)
+    
+    if success and result then
+        return result
+    end
+    
+    return nil
+end
+
+-- Try to load QBX Core
+CreateThread(function()
+    while not QBX and loadAttempts < maxAttempts do
+        QBX = LoadQBXCore()
+        
+        if not QBX then
+            Wait(1000)
+        end
+    end
+end)
+
 CurrentContract = nil
 CurrentTaskId = 0
 CurrentVehicle = nil

@@ -16,7 +16,6 @@ dependencies {
 
 shared_scripts {
     '@ox_lib/init.lua',
-    '@qbx_core/shared/lib.lua',
     'shared/config.lua',
     'shared/locations.lua',
     'shared/contractNames.lua',

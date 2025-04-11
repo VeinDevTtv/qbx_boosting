@@ -1,4 +1,4 @@
-local QBX = exports['qbx_core']:GetSharedObject()
+-- QBX will be loaded from main.lua
 
 function InitLaptop()
     -- Callback to get boosting data for a player

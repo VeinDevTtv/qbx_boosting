@@ -1,4 +1,67 @@
-local QBX = exports['qbx_core']:GetSharedObject()
+-- Try different methods to load QBX Core
+local QBX = nil
+local loadAttempts = 0
+local maxAttempts = 10
+
+local function LoadQBXCore()
+    loadAttempts = loadAttempts + 1
+    
+    -- Try different methods to load QBX Core
+    local success, result = pcall(function()
+        -- Method 1: Try require
+        return require('qbx_core')
+    end)
+    
+    if success and result then
+        print('[QBX-Boosting] Successfully loaded QBX Core via require')
+        return result
+    end
+    
+    -- Method 2: Try direct export
+    success, result = pcall(function()
+        return exports['qbx_core']:GetCoreObject()
+    end)
+    
+    if success and result then
+        print('[QBX-Boosting] Successfully loaded QBX Core via GetCoreObject export')
+        return result
+    end
+    
+    -- Method 3: Try GetSharedObject export
+    success, result = pcall(function()
+        return exports['qbx_core']:GetSharedObject()
+    end)
+    
+    if success and result then
+        print('[QBX-Boosting] Successfully loaded QBX Core via GetSharedObject export')
+        return result
+    end
+    
+    print('[QBX-Boosting] Failed to load QBX Core. Attempt ' .. loadAttempts .. ' of ' .. maxAttempts)
+    return nil
+end
+
+-- Try to load QBX Core
+CreateThread(function()
+    while not QBX and loadAttempts < maxAttempts do
+        QBX = LoadQBXCore()
+        
+        if not QBX then
+            Wait(1000)
+        end
+    end
+    
+    if not QBX then
+        print('[QBX-Boosting] Failed to load QBX Core after ' .. maxAttempts .. ' attempts. Resource may not function correctly.')
+        return
+    end
+    
+    print('[QBX-Boosting] QBX Core loaded successfully. Initializing resource...')
+    
+    -- Initialize the resource
+    InitializeResource()
+end)
+
 ActiveContracts = {}
 
 -- Function to initialize database tables
@@ -49,8 +112,8 @@ function InitializeDatabase()
     print("[QBX-Boosting] Database tables initialized successfully!")
 end
 
--- Initialize all handlers when resource starts
-CreateThread(function()
+-- Initialize all handlers
+function InitializeResource()
     -- Initialize the database first
     InitializeDatabase()
 
@@ -87,7 +150,7 @@ CreateThread(function()
     end)
     
     print("[QBX-Boosting] Resource initialized successfully!")
-end)
+end
 
 -- Register a server event handler for when resources start
 AddEventHandler('onResourceStart', function(resourceName)

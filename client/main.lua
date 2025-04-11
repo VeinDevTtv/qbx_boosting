@@ -1,9 +1,72 @@
-local QBX = exports['qbx_core']:GetSharedObject()
+-- Try different methods to load QBX Core
+local QBX = nil
+local loadAttempts = 0
+local maxAttempts = 10
+
+local function LoadQBXCore()
+    loadAttempts = loadAttempts + 1
+    
+    -- Try different methods to load QBX Core
+    local success, result = pcall(function()
+        -- Method 1: Try require
+        return require('qbx_core')
+    end)
+    
+    if success and result then
+        print('[QBX-Boosting] Successfully loaded QBX Core via require')
+        return result
+    end
+    
+    -- Method 2: Try direct export
+    success, result = pcall(function()
+        return exports['qbx_core']:GetCoreObject()
+    end)
+    
+    if success and result then
+        print('[QBX-Boosting] Successfully loaded QBX Core via GetCoreObject export')
+        return result
+    end
+    
+    -- Method 3: Try GetSharedObject export
+    success, result = pcall(function()
+        return exports['qbx_core']:GetSharedObject()
+    end)
+    
+    if success and result then
+        print('[QBX-Boosting] Successfully loaded QBX Core via GetSharedObject export')
+        return result
+    end
+    
+    print('[QBX-Boosting] Failed to load QBX Core. Attempt ' .. loadAttempts .. ' of ' .. maxAttempts)
+    return nil
+end
+
+-- Try to load QBX Core
+CreateThread(function()
+    while not QBX and loadAttempts < maxAttempts do
+        QBX = LoadQBXCore()
+        
+        if not QBX then
+            Wait(1000)
+        end
+    end
+    
+    if not QBX then
+        print('[QBX-Boosting] Failed to load QBX Core after ' .. maxAttempts .. ' attempts. Resource may not function correctly.')
+        return
+    end
+    
+    print('[QBX-Boosting] QBX Core loaded successfully. Initializing resource...')
+    
+    -- Initialize the resource
+    InitializeResource()
+end)
+
 CurrentContract = nil
 CurrentTaskId = 0
 
--- Initialize the resource when it starts
-CreateThread(function()
+-- Initialize the resource
+function InitializeResource()
     -- Set up scratch laptop zones for each location in ScratchLocations
     for i = 1, #ScratchLocations do
         local data = ScratchLocations[i]
@@ -37,7 +100,7 @@ CreateThread(function()
             SetEntityCollision(object, false, false)
         end
     end
-end)
+end
 
 -- The following exports will be used by qbx_laptop
 
