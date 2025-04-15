@@ -6,18 +6,17 @@ local maxAttempts = 10
 local function LoadQBXCore()
     loadAttempts = loadAttempts + 1
     
-    -- Try different methods to load QBX Core
+    -- Method 1: Try the bridge export first (most reliable)
     local success, result = pcall(function()
-        -- Method 1: Try require
-        return require('qbx_core')
+        return exports['qbx_core'].GetCoreObject()
     end)
     
     if success and result then
-        print('[QBX-Boosting] Successfully loaded QBX Core via require')
+        print('[QBX-Boosting] Successfully loaded QBX Core via direct export')
         return result
     end
     
-    -- Method 2: Try direct export
+    -- Method 2: Try direct export with function call
     success, result = pcall(function()
         return exports['qbx_core']:GetCoreObject()
     end)
@@ -27,13 +26,33 @@ local function LoadQBXCore()
         return result
     end
     
-    -- Method 3: Try GetSharedObject export
+    -- Method 3: Try backward compatibility export
     success, result = pcall(function()
         return exports['qbx_core']:GetSharedObject()
     end)
     
     if success and result then
         print('[QBX-Boosting] Successfully loaded QBX Core via GetSharedObject export')
+        return result
+    end
+    
+    -- Method 4: Try QB bridge compatibility
+    success, result = pcall(function()
+        return exports['qb-core']:GetCoreObject()
+    end)
+    
+    if success and result then
+        print('[QBX-Boosting] Successfully loaded QBX Core via QBCore bridge')
+        return result
+    end
+    
+    -- Method 5: Try require (least reliable)
+    success, result = pcall(function()
+        return require('qbx_core')
+    end)
+    
+    if success and result then
+        print('[QBX-Boosting] Successfully loaded QBX Core via require')
         return result
     end
     

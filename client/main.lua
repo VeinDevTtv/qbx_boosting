@@ -6,55 +6,227 @@ local maxAttempts = 10
 -- Initialize variables
 CurrentContract = nil
 CurrentTaskId = 0
+local qbxCoreLoaded = false
+
+-- Immediately notify that our exports are ready to handle laptop requests
+CreateThread(function()
+    Wait(500) -- Short delay to ensure resources are initialized
+    TriggerEvent('qbx_boosting:client:ExportsReady')
+    TriggerEvent('qbx_laptop:client:BoostingReady')
+    print('[QBX-Boosting] Notified qbx_laptop that exports are available')
+end)
+
+-- Create placeholder callback functions that will work even if server callbacks aren't available
+local function createPlaceholderBoostingData()
+    return {
+        Cid = "Unknown",
+        Experience = 0,
+        ContractsCompleted = 0,
+        ContractsFailed = 0,
+        WeeklyContracts = 0,
+        WeeklyVins = 0,
+        LastVin = 0,
+        LastSpecialContract = 0,
+        IsQueued = false,
+        Progress = {
+            Current = "D",
+            Previous = "D",
+            Next = "C",
+            Progress = 0
+        }
+    }
+end
+
+local function createPlaceholderContracts()
+    return {}
+end
+
+local function createPlaceholderAuctions()
+    return {}
+end
 
 -- These exports need to be globally accessible for qbx_laptop
 exports('GetData', function(data)
-    local result = lib.callback.await('qbx_boosting:server:GetData', false)
+    if not qbxCoreLoaded then
+        return {
+            status = "error",
+            message = "QBX Core not loaded. Please restart the resource.",
+            placeholderData = createPlaceholderBoostingData()
+        }
+    end
+    
+    local success, result = pcall(function()
+        return lib.callback.await('qbx_boosting:server:GetData', false)
+    end)
+    
+    if not success or not result then
+        return {
+            status = "error",
+            message = "Failed to fetch boosting data from server.",
+            placeholderData = createPlaceholderBoostingData()
+        }
+    end
+    
     return result
 end)
 
 exports('GetContracts', function(data)
-    local result = lib.callback.await('qbx_boosting:server:GetContracts', false)
+    if not qbxCoreLoaded then
+        return {
+            status = "error",
+            message = "QBX Core not loaded. Please restart the resource.",
+            contracts = createPlaceholderContracts()
+        }
+    end
+    
+    local success, result = pcall(function()
+        return lib.callback.await('qbx_boosting:server:GetContracts', false)
+    end)
+    
+    if not success or not result then
+        return {
+            status = "error",
+            message = "Failed to fetch contracts from server.",
+            contracts = createPlaceholderContracts()
+        }
+    end
+    
     return result
 end)
 
 exports('GetAuctions', function(data)
-    local result = lib.callback.await('qbx_boosting:server:GetAuctions', false)
+    if not qbxCoreLoaded then
+        return {
+            status = "error",
+            message = "QBX Core not loaded. Please restart the resource.",
+            auctions = createPlaceholderAuctions()
+        }
+    end
+    
+    local success, result = pcall(function()
+        return lib.callback.await('qbx_boosting:server:GetAuctions', false)
+    end)
+    
+    if not success or not result then
+        return {
+            status = "error",
+            message = "Failed to fetch auctions from server.",
+            auctions = createPlaceholderAuctions()
+        }
+    end
+    
     return result
 end)
 
 exports('SetQueue', function(data)
-    local result = lib.callback.await('qbx_boosting:server:SetQueue', false, data.state)
+    if not qbxCoreLoaded then
+        return { error = "QBX Core not loaded. Please restart the resource." }
+    end
+    
+    local success, result = pcall(function()
+        return lib.callback.await('qbx_boosting:server:SetQueue', false, data.state)
+    end)
+    
+    if not success then
+        return { error = "Failed to set queue status." }
+    end
+    
     return result
 end)
 
 exports('StartContract', function(data)
-    local result = lib.callback.await('qbx_boosting:server:StartContract', false, data.contract)
+    if not qbxCoreLoaded then
+        return { error = "QBX Core not loaded. Please restart the resource." }
+    end
+    
+    local success, result = pcall(function()
+        return lib.callback.await('qbx_boosting:server:StartContract', false, data.contract)
+    end)
+    
+    if not success then
+        return { error = "Failed to start contract." }
+    end
+    
     return result
 end)
 
 exports('DeclineContract', function(data)
-    local result = lib.callback.await('qbx_boosting:server:DeclineContract', false, data.contract)
+    if not qbxCoreLoaded then
+        return { error = "QBX Core not loaded. Please restart the resource." }
+    end
+    
+    local success, result = pcall(function()
+        return lib.callback.await('qbx_boosting:server:DeclineContract', false, data.contract)
+    end)
+    
+    if not success then
+        return { error = "Failed to decline contract." }
+    end
+    
     return result
 end)
 
 exports('CancelContract', function(data)
-    local result = lib.callback.await('qbx_boosting:server:CancelContract', false, data.contract)
+    if not qbxCoreLoaded then
+        return { error = "QBX Core not loaded. Please restart the resource." }
+    end
+    
+    local success, result = pcall(function()
+        return lib.callback.await('qbx_boosting:server:CancelContract', false, data.contract)
+    end)
+    
+    if not success then
+        return { error = "Failed to cancel contract." }
+    end
+    
     return result
 end)
 
 exports('AuctionContract', function(data)
-    local result = lib.callback.await('qbx_boosting:server:AuctionContract', false, data)
+    if not qbxCoreLoaded then
+        return { error = "QBX Core not loaded. Please restart the resource." }
+    end
+    
+    local success, result = pcall(function()
+        return lib.callback.await('qbx_boosting:server:AuctionContract', false, data)
+    end)
+    
+    if not success then
+        return { error = "Failed to auction contract." }
+    end
+    
     return result
 end)
 
 exports('TransferContract', function(data)
-    local result = lib.callback.await('qbx_boosting:server:TransferContract', false, data)
+    if not qbxCoreLoaded then
+        return { error = "QBX Core not loaded. Please restart the resource." }
+    end
+    
+    local success, result = pcall(function()
+        return lib.callback.await('qbx_boosting:server:TransferContract', false, data)
+    end)
+    
+    if not success then
+        return { error = "Failed to transfer contract." }
+    end
+    
     return result
 end)
 
 exports('PlaceBid', function(data)
-    local result = lib.callback.await('qbx_boosting:server:PlaceBid', false, data)
+    if not qbxCoreLoaded then
+        return { error = "QBX Core not loaded. Please restart the resource." }
+    end
+    
+    local success, result = pcall(function()
+        return lib.callback.await('qbx_boosting:server:PlaceBid', false, data)
+    end)
+    
+    if not success then
+        return { error = "Failed to place bid." }
+    end
+    
     return result
 end)
 
@@ -81,6 +253,7 @@ local function LoadQBXCore()
     
     if success and result then
         print('[QBX-Boosting] Successfully loaded QBX Core via require')
+        qbxCoreLoaded = true
         return result
     end
     
@@ -91,6 +264,7 @@ local function LoadQBXCore()
     
     if success and result then
         print('[QBX-Boosting] Successfully loaded QBX Core via GetCoreObject export')
+        qbxCoreLoaded = true
         return result
     end
     
@@ -101,6 +275,7 @@ local function LoadQBXCore()
     
     if success and result then
         print('[QBX-Boosting] Successfully loaded QBX Core via GetSharedObject export')
+        qbxCoreLoaded = true
         return result
     end
     
@@ -110,41 +285,45 @@ end
 
 -- Initialize the resource
 function InitializeResource()
-    -- Set up scratch laptop zones for each location in ScratchLocations
-    for i = 1, #ScratchLocations do
-        local data = ScratchLocations[i]
-        exports.ox_target:addBoxZone({
-            coords = vec3(data.Laptop.Coords.x, data.Laptop.Coords.y, data.Laptop.Coords.z),
-            size = vec3(0.3, 0.3, 0.4),
-            rotation = data.Laptop.Coords.w,
-            debug = false,
-            options = {
-                {
-                    name = "boosting-vin-laptop-" .. i,
-                    icon = "fas fa-laptop",
-                    label = "Prepare VIN Scratch",
-                    distance = 2.5,
-                    onSelect = function()
-                        TriggerEvent("qbx_boosting:client:PrepareVIN")
-                    end,
-                    canInteract = function()
-                        return CurrentContract ~= nil and CurrentContract.Vin and CurrentTaskId == 4
-                    end
+    if qbxCoreLoaded then
+        -- Set up scratch laptop zones for each location in ScratchLocations
+        for i = 1, #ScratchLocations do
+            local data = ScratchLocations[i]
+            exports.ox_target:addBoxZone({
+                coords = vec3(data.Laptop.Coords.x, data.Laptop.Coords.y, data.Laptop.Coords.z),
+                size = vec3(0.3, 0.3, 0.4),
+                rotation = data.Laptop.Coords.w,
+                debug = false,
+                options = {
+                    {
+                        name = "boosting-vin-laptop-" .. i,
+                        icon = "fas fa-laptop",
+                        label = "Prepare VIN Scratch",
+                        distance = 2.5,
+                        onSelect = function()
+                            TriggerEvent("qbx_boosting:client:PrepareVIN")
+                        end,
+                        canInteract = function()
+                            return CurrentContract ~= nil and CurrentContract.Vin and CurrentTaskId == 4
+                        end
+                    }
                 }
-            }
-        })
+            })
 
-        -- Create the laptop object if needed
-        if data.Laptop.Create then
-            lib.requestModel(data.Laptop.Create)
-            local object = CreateObject(data.Laptop.Create, data.Laptop.Coords.x, data.Laptop.Coords.y, data.Laptop.Coords.z, true, false, false)
-            FreezeEntityPosition(object, true)
-            SetEntityHeading(object, data.Laptop.Coords.w)
-            SetEntityCollision(object, false, false)
+            -- Create the laptop object if needed
+            if data.Laptop.Create then
+                lib.requestModel(data.Laptop.Create)
+                local object = CreateObject(data.Laptop.Create, data.Laptop.Coords.x, data.Laptop.Coords.y, data.Laptop.Coords.z, true, false, false)
+                FreezeEntityPosition(object, true)
+                SetEntityHeading(object, data.Laptop.Coords.w)
+                SetEntityCollision(object, false, false)
+            end
         end
+        
+        print('[QBX-Boosting] Resource fully initialized with QBX Core!')
+    else
+        print('[QBX-Boosting] Resource initialized with limited functionality (laptop integration only)!')
     end
-    
-    print('[QBX-Boosting] Resource initialized and exports registered!')
 end
 
 -- Try to load QBX Core
@@ -158,17 +337,22 @@ CreateThread(function()
     end
     
     if not QBX then
-        print('[QBX-Boosting] Failed to load QBX Core after ' .. maxAttempts .. ' attempts. Resource may not function correctly.')
+        print('[QBX-Boosting] Failed to load QBX Core after ' .. maxAttempts .. ' attempts. Resource will operate with limited functionality.')
     else
         print('[QBX-Boosting] QBX Core loaded successfully. Initializing resource...')
     end
     
-    -- Initialize the resource even if QBX failed to load - this ensures the exports are registered
+    -- Initialize the resource - only do full init if QBX Core is loaded
     InitializeResource()
 end)
 
 -- Create group event handler
 RegisterNetEvent('qbx_boosting:client:CreateGroup', function()
+    if not qbxCoreLoaded then
+        print('[QBX-Boosting] Cannot create group: QBX Core not loaded')
+        return
+    end
+    
     local myJob = lib.callback.await('qbx_jobmanager:server:GetMyJob', false)
     if not myJob or not myJob.CurrentJob then return end
     if myJob.CurrentJob ~= "boosting" then return end
@@ -180,6 +364,11 @@ end)
 
 -- Prepare VIN scratch event handler
 RegisterNetEvent('qbx_boosting:client:PrepareVIN', function()
+    if not qbxCoreLoaded then 
+        print('[QBX-Boosting] Cannot prepare VIN: QBX Core not loaded')
+        return
+    end
+    
     -- This would be implemented in the handlers/boost.lua file
     -- Just a placeholder for now
     if CurrentContract and CurrentContract.Vin and CurrentTaskId == 4 then
